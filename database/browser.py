@@ -115,11 +115,22 @@ class Window(Tk):
 
     def filter_now(self):
         datas = [data.get() for data in self.filter_entries]
+        datas_len = 0
+        for item in datas:
+            if item != '':
+                datas_len += 1
+
         filtered_data = []
-        for i in range(len(datas)):
-            for j in range(len(self.data)):
-                if datas[i] == self.data[j][i]:
-                    filtered_data.append(self.data[j])
+        check_short = [[] for i in range(len(self.data))]
+        for i in range(len(self.data)):
+            for j in range(len(datas)):
+                if self.data[i][j] == datas[j]:
+                    check_short[i].append(1)
+
+        for i, item in enumerate(check_short):
+            if len(item) == datas_len:
+                filtered_data.append(self.data[i])
+
         filtered_data.insert(0, self.data[0])
         self.write_data(filtered_data)
 
