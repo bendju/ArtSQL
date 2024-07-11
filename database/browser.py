@@ -35,7 +35,7 @@ class Window(Tk):
         settings_button.grid(row=0, column=3, padx=4, pady=0)
         self.database_condition.grid(row=0, column=4, padx=10, pady=0)
 
-        self.button_box.grid(row=0, column=0, sticky='w')
+        self.button_box.grid(row=0, column=0, sticky='w', pady=6)
         self.datas_name_box.grid(row=1, column=0, sticky='w')
         self.sf.grid(row=2, column=0, columnspan=2)
 
@@ -97,13 +97,21 @@ class Window(Tk):
 
             filter_box = s_filter.display_widget(Frame)
             s_filter.pack(fill=BOTH, expand=True)
+
+            frame = ttk.Frame(filter_box)
+            Label(frame, text='DataBase Index', width=25).grid(row=0, column=0)
+            entry = Entry(frame, width=25)
+            entry.grid(row=0, column=1)
+            self.filter_entries.append(entry)
+            frame.grid(row=0, column=0, pady=4)
+
             for i, item in enumerate(self.data[0]):
                 frame = ttk.Frame(filter_box)
                 Label(frame, text=item, width=25).grid(row=i, column=0)
                 entry = Entry(frame, width=25)
                 entry.grid(row=i, column=1)
                 self.filter_entries.append(entry)
-                frame.grid(row=i, column=0, pady=4)
+                frame.grid(row=i+1, column=0, pady=4)
 
             collect_button = ttk.Button(filter_box, text='Filter', command=self.filter_now)
             collect_button.grid()
@@ -113,11 +121,15 @@ class Window(Tk):
 
 
     def filter_now(self):
-        print(f'{self.filter_entries} data, type: {type(self.filter_entries)}')
-        datas = []
-        for i, item in self.filter_entries:
-            datas.append(item.get())
-        print(datas, self.filter_entries)
+        datas = [data.get() for data in self.filter_entries]
+        filtered_data = []
+        for i in range(len(datas)):
+            for j in range(len(self.data)):
+                if datas[i] == self.data[j][i]:
+                    filtered_data.append(self.data[j])
+        self.write_data(filtered_data)
+
+
     def settings(self):
         pass
 
