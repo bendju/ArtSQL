@@ -98,13 +98,6 @@ class Window(Tk):
             filter_box = s_filter.display_widget(Frame)
             s_filter.pack(fill=BOTH, expand=True)
 
-            frame = ttk.Frame(filter_box)
-            Label(frame, text='DataBase Index', width=25).grid(row=0, column=0)
-            entry = Entry(frame, width=25)
-            entry.grid(row=0, column=1)
-            self.filter_entries.append(entry)
-            frame.grid(row=0, column=0, pady=4)
-
             for i, item in enumerate(self.data[0]):
                 frame = ttk.Frame(filter_box)
                 Label(frame, text=item, width=25).grid(row=i, column=0)
@@ -122,11 +115,12 @@ class Window(Tk):
 
     def filter_now(self):
         datas = [data.get() for data in self.filter_entries]
-        filtered_data = []  #
+        filtered_data = []
         for i in range(len(datas)):
             for j in range(len(self.data)):
                 if datas[i] == self.data[j][i]:
                     filtered_data.append(self.data[j])
+        filtered_data.insert(0, self.data[0])
         self.write_data(filtered_data)
 
 

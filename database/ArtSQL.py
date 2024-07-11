@@ -26,7 +26,7 @@ class ArtSQL:
                     self.bool_row = False
         if self.bool_row:
             with open('file.artsql', 'ab') as f:
-                f.write(f'{self.index}.{self.row_index};'.encode())
+                f.write(f'{self.index};{self.row_index};'.encode())
                 for i, item in enumerate(data.items()):
                     if item[0] != self.fields_items[i][0]:
                         error(f'error you added invalid parameter: ** {item[0]} ** but giving ** {self.fields_items[i][0]} **')
@@ -39,7 +39,7 @@ class ArtSQL:
     def create_file(self):
         if not os.path.exists('file.artsql'):
             with open('file.artsql', 'ab') as f:
-                f.write(f'Index;'.encode())
+                f.write(f'Database;Index;'.encode())
                 for i in range(len(self.fields_items)):
                     f.write(f'{self.fields_items[i][0]};'.encode())
                 f.write('\n'.encode())
