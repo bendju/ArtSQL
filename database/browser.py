@@ -26,13 +26,11 @@ class Window(Tk):
         open_button = ttk.Button(self.button_box, text='Open', command=self.open_database, padding=5)
         refresh_button = ttk.Button(self.button_box, text='Refresh', command=self.re_open_database, padding=5)
         filter_button = ttk.Button(self.button_box, text='Filter', command=self.filter, padding=5)
-        settings_button = ttk.Button(self.button_box, text='Settings', command=self.settings, padding=5)
         self.database_condition = Label(self.button_box, text='Please Open Database', fg='red')
 
         open_button.grid(row=0, column=0, padx=4, pady=0)
         refresh_button.grid(row=0, column=1, padx=4, pady=0)
         filter_button.grid(row=0, column=2, padx=4, pady=0)
-        settings_button.grid(row=0, column=3, padx=4, pady=0)
         self.database_condition.grid(row=0, column=4, padx=10, pady=0)
 
         self.button_box.grid(row=0, column=0, sticky='w', pady=6)
@@ -80,7 +78,7 @@ class Window(Tk):
     def on_resize(self, event):
         self.width = self.winfo_width()
         self.height = self.winfo_height()
-        self.sf.configure(width=self.width-20, height=self.height-55)
+        self.sf.configure(width=self.width-20, height=self.height-65)
 
     def filter(self):
         if self.file_path != '':
@@ -134,9 +132,6 @@ class Window(Tk):
         filtered_data.insert(0, self.data[0])
         self.write_data(filtered_data)
 
-
-    def settings(self):
-        pass
 
 app = Window()
 
