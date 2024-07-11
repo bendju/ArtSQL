@@ -122,7 +122,7 @@ class Window(Tk):
 
     def filter_now(self):
         datas = [data.get() for data in self.filter_entries]
-        filtered_data = []
+        filtered_data = []  #
         for i in range(len(datas)):
             for j in range(len(self.data)):
                 if datas[i] == self.data[j][i]:
