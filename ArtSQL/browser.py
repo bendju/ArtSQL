@@ -4,6 +4,7 @@ from tkinter import filedialog
 from tkinter import Toplevel
 from tkscrolledframe import ScrolledFrame
 
+# noTODO bool filter_now
 
 class Window(Tk):
     def __init__(self):
@@ -76,9 +77,12 @@ class Window(Tk):
     def write_data(self, data):
         filtered_data = []
         for i in range(len(data)):
-            if int(data[i][0]) == self.select_database_var.get():
-                data[i].pop(0)
-                filtered_data.append(data[i])
+            try:
+                if int(data[i][0]) == self.select_database_var.get():
+                    data[i].pop(0)
+                    filtered_data.append(data[i])
+            except:
+                pass
         data = filtered_data
         for i, item in enumerate(data):
             if item[0] == 'Database':
@@ -115,8 +119,8 @@ class Window(Tk):
             filter_box = s_filter.display_widget(Frame)
             s_filter.pack(fill=BOTH, expand=True)
 
-            temporary_data = self.data[0].pop(0)
-            for i, item in enumerate(self.data[0]):
+            temporary_data = self.data[0]
+            for i, item in enumerate(temporary_data[2:]):
                 frame = ttk.Frame(filter_box)
                 Label(frame, text=item, width=25).grid(row=i, column=0)
                 entry = Entry(frame, width=25)
