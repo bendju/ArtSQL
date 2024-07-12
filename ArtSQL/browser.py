@@ -23,14 +23,19 @@ class Window(Tk):
         self.button_box = ttk.Frame(self)
         self.datas_name_box = ttk.Frame(self)
 
+        self.select_database_var = IntVar()
+        self.select_database = ttk.Combobox(self.button_box, textvariable=self.select_database_var, width=4, state='disabled')
+        self.select_database['values'] = (1,)
+        self.select_database.current(0)
         open_button = ttk.Button(self.button_box, text='Open', command=self.open_database, padding=5)
         refresh_button = ttk.Button(self.button_box, text='Refresh', command=self.re_open_database, padding=5)
         filter_button = ttk.Button(self.button_box, text='Filter', command=self.filter, padding=5)
         self.database_condition = Label(self.button_box, text='Please Open Database', fg='red')
 
-        open_button.grid(row=0, column=0, padx=4, pady=0)
-        refresh_button.grid(row=0, column=1, padx=4, pady=0)
-        filter_button.grid(row=0, column=2, padx=4, pady=0)
+        self.select_database.grid(row=0, column=0, padx=4, pady=0)
+        open_button.grid(row=0, column=1, padx=4, pady=0)
+        refresh_button.grid(row=0, column=2, padx=4, pady=0)
+        filter_button.grid(row=0, column=3, padx=4, pady=0)
         self.database_condition.grid(row=0, column=4, padx=10, pady=0)
 
         self.button_box.grid(row=0, column=0, sticky='w', pady=6)
@@ -42,16 +47,20 @@ class Window(Tk):
         self.bind("<Configure>", self.on_resize)
 
     def open_database(self):
-        self.file_path = filedialog.askopenfilename(title='Open file', filetypes=(("ARTSQL ArtSQL", "*.artsql"),))
+        self.file_path = filedialog.askopenfilename(title='Open file', filetypes=(("ARTSQL Database", "*.artsql"),))
         if self.file_path != '':
             self.data = []
+            select_index = 0
             with open(self.file_path, 'r') as f:
                 for row in f:
                     data = row.strip().split(';')
                     data.pop()
+                    if data[1] == 'Database':
+                        select_index += 1
                     self.data.append(data)
             self.write_data(self.data)
             self.database_condition.config(text='Database Opened', fg='green')
+            self.select_database_configure(select_index)
 
     def re_open_database(self):
         if self.file_path != '':
@@ -65,6 +74,16 @@ class Window(Tk):
             self.database_condition.config(text='Successful Reloaded', fg='orange')
 
     def write_data(self, data):
+        filtered_data = []
+        for i in range(len(data)):
+            if int(data[i][0]) == self.select_database_var.get():
+                data[i].pop(0)
+                filtered_data.append(data[i])
+        data = filtered_data
+        for i, item in enumerate(data):
+            if item[0] == 'Database':
+                item.pop(0)
+
         for item in self.label_datas:
             item.grid_forget()
             item.destroy()
@@ -96,6 +115,7 @@ class Window(Tk):
             filter_box = s_filter.display_widget(Frame)
             s_filter.pack(fill=BOTH, expand=True)
 
+            temporary_data = self.data[0].pop(0)
             for i, item in enumerate(self.data[0]):
                 frame = ttk.Frame(filter_box)
                 Label(frame, text=item, width=25).grid(row=i, column=0)
@@ -109,7 +129,6 @@ class Window(Tk):
 
         else:
             self.database_condition.configure(text='Please Open Database', fg='red', font=('Arial', 14))
-
 
     def filter_now(self):
         datas = [data.get() for data in self.filter_entries]
@@ -131,6 +150,11 @@ class Window(Tk):
 
         filtered_data.insert(0, self.data[0])
         self.write_data(filtered_data)
+
+    def select_database_configure(self, value):
+        self.select_database['values'] = list((i + 1 for i in range(value)))
+        self.select_database.config(state='active')
+        print(self.select_database_var.get())
 
 
 app = Window()

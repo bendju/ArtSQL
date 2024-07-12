@@ -40,6 +40,8 @@ class ArtSQL:
 
 
     def add_data(self, oblige=False, **data):
+        if len(data) != len(self.__fields_items):
+            error('you do not added enough parameters!')
         self.__row_index += 1
         with open('file.artsql', 'rb') as f:
             for row in f:
@@ -87,9 +89,45 @@ class ArtSQL:
         return s
 
     def __add_table_fields(self):
-        with open('file.artsql', 'ab') as f:
-            f.write(f'Database;Index;'.encode())
-            for i in range(len(self.__fields_items)):
-                f.write(f'{self.__fields_items[i][0]};'.encode())
-            f.write('\n'.encode())
+        help_val = True
+        with open('file.artsql', 'r') as f:
+            for row in f:
+                datas = row.strip().split(';')
+                try:
+                    if int(datas[0]) == self.__index:
+                        help_val = False
+                except:
+                    pass
+        if help_val:
+            with open('file.artsql', 'ab') as f:
+                f.write(f'{self.__index};Database;Index;'.encode())
+                for i in range(len(self.__fields_items)):
+                    f.write(f'{self.__fields_items[i][0]};'.encode())
+                f.write('\n'.encode())
+
+    @staticmethod
+    def sort_database():
+        database, data = [], []
+        with open('file.artsql', 'r') as read:
+            for row in read:
+                datas = row.strip().split(';')
+                datas.pop()
+                if datas[1] == 'Database':
+                    database.append(datas)
+                else:
+                    data.append(datas)
+
+        with open('file.artsql', 'wb') as write:
+            for i, item in enumerate(database):
+                for j in range(len(item)):
+                    write.write(f'{database[i][j]};'.encode())
+                write.write('\n'.encode())
+
+            for i, item in enumerate(data):
+                for j in range(len(item)):
+                    write.write(f'{data[i][j]};'.encode())
+                write.write('\n'.encode())
+
+
+
 
