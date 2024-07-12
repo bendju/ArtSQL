@@ -6,6 +6,7 @@ from .errors import error
 index = 0
 class ArtSQL:
     def __init__(self, **fields):
+        self.data = None
         global index
         self.__fields_row = []
         self.__fields_items = [item for item in fields.items()]
@@ -35,9 +36,53 @@ class ArtSQL:
                     pass
         return datas
 
-    def get_filter_data(self):
-        datas = self.get_all_data()
+    def get_list_data(self, **filter_parameters):
+        self.data = self.get_all_data()
+        self.data[0].pop(0)
+        datas = [item for item in filter_parameters.items()]
 
+        valid_parameters = []
+        valid_datas = self.__fields_items
+        valid_datas.insert(0, ('index', 1))
+
+        for i in range(len(datas)):## table datas * filter items
+            for j in range(len(self.data[0])):
+                if self.data[0][j].lower() == datas[i][0]:
+                    if type(self.data[1][j]) != type(datas[i][1]):
+                        error(f'error')
+                    valid_parameters.append(1)
+
+        if len(valid_parameters) != len(datas):
+            error(f'You added invalid filter parameter(s)')
+
+        return_data = []
+        check_sort = [[] for i in range(len(self.data))]
+        self.data.pop(0)
+
+        var_list = []
+        for i, item in enumerate(self.__fields_items):
+            for j in range(len(datas)):
+                if item[0] == datas[j][0]:
+                    var_list.append(i)
+
+        for i, item in enumerate(self.data):
+            for j in range(len(var_list)):
+                for k in range(len(datas)):
+                    if item[var_list[j]] == datas[k][1]:
+                        check_sort[i].append(1)
+
+        for i, item in enumerate(check_sort):
+            if len(item) == len(filter_parameters):
+                return_data.append(self.data[i])
+        return return_data
+
+    def get_dict_data(self, **filter_parameters):
+        list_data = self.get_list_data(**filter_parameters)
+        return_data = []
+        keys = [k for k, i in self.__fields_items]
+        for i in range(len(list_data)):
+            return_data.append(dict(zip(keys, list_data[i])))
+        return return_data
 
     def add_data(self, oblige=False, **data):
         if len(data) != len(self.__fields_items):
@@ -65,7 +110,6 @@ class ArtSQL:
                 for item in data.items():
                     f.write(f'{item[1]};'.encode())
                 f.write('\n'.encode())
-
 
     def create_file(self):
         if not os.path.exists('file.artsql'):
