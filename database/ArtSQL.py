@@ -5,7 +5,6 @@ from .errors import error
 # noTODO separating table rows and sqlbrowser ***
 index = 0
 class ArtSQL:
-
     def __init__(self, **fields):
         global index
         self.__fields_row = []
@@ -16,6 +15,7 @@ class ArtSQL:
         self.__row_index = 0
         self.__bool_row = True
         self.create_file()
+        self.__add_table_fields()
 
 
     def get_all_data(self):
@@ -67,11 +67,8 @@ class ArtSQL:
 
     def create_file(self):
         if not os.path.exists('file.artsql'):
-            with open('file.artsql', 'ab') as f:
-                f.write(f'Database;Index;'.encode())
-                for i in range(len(self.__fields_items)):
-                    f.write(f'{self.__fields_items[i][0]};'.encode())
-                f.write('\n'.encode())
+            with open('file.artsql', 'ab'):
+                pass
 
     def __convert_string(self, s):
         if s.lower() == 'true':
@@ -88,4 +85,11 @@ class ArtSQL:
             pass
 
         return s
+
+    def __add_table_fields(self):
+        with open('file.artsql', 'ab') as f:
+            f.write(f'Database;Index;'.encode())
+            for i in range(len(self.__fields_items)):
+                f.write(f'{self.__fields_items[i][0]};'.encode())
+            f.write('\n'.encode())
 
