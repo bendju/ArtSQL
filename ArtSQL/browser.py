@@ -42,7 +42,7 @@ class Window(Tk):
         self.bind("<Configure>", self.on_resize)
 
     def open_database(self):
-        self.file_path = filedialog.askopenfilename(title='Open file', filetypes=(("ARTSQL database", "*.artsql"),))
+        self.file_path = filedialog.askopenfilename(title='Open file', filetypes=(("ARTSQL ArtSQL", "*.artsql"),))
         if self.file_path != '':
             self.data = []
             with open(self.file_path, 'r') as f:
