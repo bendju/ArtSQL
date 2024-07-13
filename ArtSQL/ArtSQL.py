@@ -127,6 +127,37 @@ class ArtSQL:
                     f.write(f'{new_datas[i][j]};')
                 f.write('\n')
 
+    def del_by_filter(self, **deleting_filter_parameters):
+        deleting_datas = self.get_list_data(**deleting_filter_parameters)
+        print(deleting_datas)
+
+        all_data = []
+        with open('file.artsql', 'r') as f:
+            for row in f:
+                convert_datas = []
+                datas = row.strip().split(';')
+                datas.pop()
+                for item in datas:
+                    convert_datas.append(self.__convert_string(item))
+                all_data.append(convert_datas)
+
+        database_data = [item[1:] for item in all_data if item[0] == self.__index]
+        final_data = [item for item in database_data if item not in deleting_datas]
+        no_database_data = [item for item in all_data if item[0] != self.__index]
+
+        for i in range(len(final_data)):
+            final_data[i].insert(0, self.__index)
+
+        for i in range(len(no_database_data)):
+            final_data.append(no_database_data[i])
+
+        with open('file.artsql', 'w') as f:
+            for i, item in enumerate(final_data):
+                for j in range(len(item)):
+                    f.write(f'{final_data[i][j]};')
+                f.write('\n')
+        self.__sort_database()
+
     def __create_file(self):
         if not os.path.exists('file.artsql'):
             with open('file.artsql', 'ab'):
