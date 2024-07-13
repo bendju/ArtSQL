@@ -3,7 +3,7 @@ from .errors import error
 
 
 index = 0
-class ArtSQL:
+class MetaArtSQL:
     def __init__(self, **fields):
         self.data = None
         global index
