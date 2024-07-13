@@ -4,11 +4,12 @@ from tkinter import filedialog
 from tkinter import Toplevel
 from tkscrolledframe import ScrolledFrame
 
-# noTODO bool filter_now
+# noTODO bool filter_now create full new
 
 class Window(Tk):
     def __init__(self):
         super().__init__()
+        self.temporary_data = []
         self.label_datas = []
         self.width = 800
         self.height = 600
@@ -77,6 +78,10 @@ class Window(Tk):
     def write_data(self, data):
         filtered_data = []
         for i in range(len(data)):
+            if data[i][1] == 'Database':
+                self.temporary_data.append(data[i])
+
+        for i in range(len(data)):
             try:
                 if int(data[i][0]) == self.select_database_var.get():
                     data[i].pop(0)
@@ -119,8 +124,14 @@ class Window(Tk):
             filter_box = s_filter.display_widget(Frame)
             s_filter.pack(fill=BOTH, expand=True)
 
-            temporary_data = self.data[0]
-            for i, item in enumerate(temporary_data[2:]):
+            choice_temporary_data = []
+            for i, item in enumerate(self.temporary_data):
+                if self.data[i][1] == 'Database' and int(self.data[i][0]) == self.select_database_var.get():
+                    choice_temporary_data = self.data[i]
+
+            print(self.temporary_data)
+
+            for i, item in enumerate(choice_temporary_data[2:]):
                 frame = ttk.Frame(filter_box)
                 Label(frame, text=item, width=25).grid(row=i, column=0)
                 entry = Entry(frame, width=25)
@@ -158,7 +169,6 @@ class Window(Tk):
     def select_database_configure(self, value):
         self.select_database['values'] = list((i + 1 for i in range(value)))
         self.select_database.config(state='active')
-        print(self.select_database_var.get())
 
 
 app = Window()
