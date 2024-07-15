@@ -1,145 +1,164 @@
 import os.path
-from .errors import error
-
+from .errors import *
 
 index = 0
-class MetaArtSQL:
-    def __init__(self, **fields):
-        self.data = None
-        global index
-        self.__fields_row = []
-        self.__fields_items = [item for item in fields.items()]
 
+## noTODO re del_by_filter, get_list_data
+class MetaArtSQL:
+    def __init__(self, filename='file', **fields):
+        global index
         index += 1
         self.__index = index
         self.__row_index = 0
-        self.__bool_row = True
+        self.__filename = filename
+        self.__fields_items = [item for item in fields.items()]
+
         self.__create_file()
         self.__add_table_fields()
+        self.__sort_database()
 
-    def get_all_data(self):
-        datas = []
-        with open('file.artsql', 'r') as f:
-            for row in f:
-                data = row.strip().split(';')
-                data.pop()
-                try:
-                    if int(data[0]) == self.__index:
-                        convert_data = []
-                        for i in range(len(data)):
-                            convert_data.append(self.__convert_string(data[i]))
-                        convert_data.pop(0)
-                        datas.append(convert_data)
-                except:
-                    pass
-        return datas
+    def get_list_data(self, fields=False, **filter_parameters):
+        self.__len_check(filter_parameters, f'Add Minimum 1 filter parameter for filtering')
+        filtering_datas = [item for item in filter_parameters.items()]
+        filter_parameters = self.__fields_items
+        filter_parameters.insert(0, ('index', 1))
 
-    def get_list_data(self, **filter_parameters):
-        self.data = self.get_all_data()
-        self.data[0].pop(0)
-        datas = [item for item in filter_parameters.items()]
+        # check types
+        for i in range(len(filtering_datas)):
+            for j in range(len(filter_parameters)):
+                if filtering_datas[i][0] == filter_parameters[j][0]:
+                    if type(filtering_datas[i][1]) != type(filter_parameters[j][1]):
+                        error(f'You Added Invalid type in get_list_data() method!! \n'
+                              f' ** {filtering_datas[i][0]} parameter giving {type(filter_parameters[j][1])}\n'
+                              f' but you added {type(filtering_datas[i][1])} **')
 
-        valid_parameters = []
-        valid_datas = self.__fields_items
-        valid_datas.insert(0, ('index', 1))
-
-        for i in range(len(datas)):## table datas * filter items
-            for j in range(len(self.data[0])):
-                if self.data[0][j].lower() == datas[i][0]:
-                    if type(self.data[1][j]) != type(datas[i][1]):
-                        error(f'error')
-                    valid_parameters.append(1)
-
-        if len(valid_parameters) != len(datas):
-            error(f'You added invalid filter parameter(s)')
-
+        # select datas
         return_data = []
-        check_sort = [[] for i in range(len(self.data))]
-        self.data.pop(0)
+        return_index = []
+        filter_template = [] # [None, 'beni', 10]
+        filtering_datas_dict = dict(filtering_datas)
+        for data in filter_parameters:
+            key, item = data
+            if key in filtering_datas_dict:
+                filter_template.append(filtering_datas_dict[key])
+            else:
+                filter_template.append(None)
 
-        var_list = []
-        for i, item in enumerate(self.__fields_items):
-            for j in range(len(datas)):
-                if item[0] == datas[j][0]:
-                    var_list.append(i)
 
-        for i, item in enumerate(self.data):
-            for j in range(len(var_list)):
-                for k in range(len(datas)):
-                    if item[var_list[j]] == datas[k][1]:
-                        check_sort[i].append(1)
+        data = [item for item in self.get_all_data() if item[0] != 'Database']
+        # print(data)
+        for i in range(len(data)):
+            for j in range(len(filter_template)):
+                print('dara', data)
+                print()
+                if filter_template[j] is None:
+                    data[i].pop(j)
+                    data[i].insert(j, None)
+                    print('data i', data[i])
+                    print('data i j', data[i][j])
 
-        for i, item in enumerate(check_sort):
-            if len(item) == len(filter_parameters):
-                return_data.append(self.data[i])
-        return return_data
+        ## get return indexes
+        for i, item in enumerate(data):
+            if item == filter_template:
+                return_index.append(i)
+
+        # return data
+        data = self.get_all_data()
+        for i in return_index:
+            return_data.append(data[i])
+
+        return return_data if fields else return_data[1:]
 
     def get_dict_data(self, **filter_parameters):
-        list_data = self.get_list_data(**filter_parameters)
+        data = self.get_list_data(**filter_parameters)
         return_data = []
         keys = [k for k, i in self.__fields_items]
-        for i in range(len(list_data)):
-            return_data.append(dict(zip(keys, list_data[i])))
+        for i in range(len(data)):
+            return_data.append(dict(zip(keys, data[i])))
         return return_data
 
+    def get_all_data(self, fields=False):
+        data = self.__get_all()
+        convert_data = [item[1:] for item in data if item[0] == self.__index]
+        return convert_data if fields else convert_data[1:]
+
     def add_data(self, oblige=False, **data):
-        if len(data) != len(self.__fields_items):
-            error('you do not added enough parameters!')
+        # check rows
+        check = True
+        check_data = self.__get_all()
         self.__row_index += 1
-        with open('file.artsql', 'rb') as f:
-            for row in f:
-                datas = row.strip().split(';'.encode())
-                if f'{datas[0].decode()}.{datas[1].decode()}' == f'{self.__index}.{self.__row_index}':
-                    self.__bool_row = False
-                    try:
-                        self.__row_index = int(datas[1].decode()) + 1
-                    except Exception:
-                        pass
+        database_data = [item[1:] for item in check_data if item[0] == self.__index]
 
-        if self.__bool_row or oblige:
-            with open('file.artsql', 'ab') as f:
-                for i, item in enumerate(data.items()):
-                    if item[0] != self.__fields_items[i][0]:
-                        error(f'error you added invalid parameter (add_data()): ** {item[0]} ** but giving ** {self.__fields_items[i][0]} **')
-                    if type(self.__fields_items[i][1]) != type(item[1]):
-                        error('You Added invalid parameter(s)')
+        for i in range(len(database_data)):
+            if database_data[i][0] == self.__row_index:
+                check = False
 
-                f.write(f'{self.__index};{self.__row_index};'.encode())
-                for item in data.items():
-                    f.write(f'{item[1]};'.encode())
-                f.write('\n'.encode())
+        # check length
+        try:
+            if len(data) != len(self.__fields_items):
+                raise ValueError
+        except ValueError as e:
+            print(e)
+            error('you do not added enough parameters!')
 
-    def del_full_database(self):
-        datas = []
-        with open('file.artsql', 'r') as f:
-            for row in f:
-                data = row.strip().split(';')
-                data.pop()
-                datas.append(data)
-
-        new_datas = []
+        ## check type
+        datas = [item for item in data.items()]
         for i in range(len(datas)):
-            if int(datas[i][0]) != self.__index:
-                new_datas.append(datas[i])
-        with open('file.artsql', 'w') as f:
-            for i, item in enumerate(new_datas):
-                for j in range(len(item)):
-                    f.write(f'{new_datas[i][j]};')
-                f.write('\n')
+            if datas[i][1] == '':
+                tuple_data = (datas[i][0] , self.__fields_items[i][1])
+                datas.pop(i)
+                datas.insert(i, tuple_data)
+            try:
+                if type(datas[i][1]) != type(self.__fields_items[i][1]):
+                    raise ValueError
+            except:
+                error(f'You Added Invalid Value in add_data() method\n give me {type(datas[i][1])}, and not {type(self.__fields_items[i][1])}')
 
-    def del_by_filter(self, **deleting_filter_parameters):
-        deleting_datas = self.get_list_data(**deleting_filter_parameters)
-        print(deleting_datas)
+        ## covert
+        final_data = [[item[1] for item in datas]]
+        if oblige:
+            final_data[0].insert(0, f'{database_data[len(database_data) -1][0] + 1}')
+        else:
+            final_data[0].insert(0, self.__row_index)
+        final_data[0].insert(0, self.__index)
 
-        all_data = []
-        with open('file.artsql', 'r') as f:
-            for row in f:
-                convert_datas = []
-                datas = row.strip().split(';')
-                datas.pop()
-                for item in datas:
-                    convert_datas.append(self.__convert_string(item))
-                all_data.append(convert_datas)
+        # add data
+        if check or oblige:
+            self.__write_all(final_data)
+
+    def delete_database_file(self):
+        try:
+            os.remove(f'{self.__filename}.artsql')
+        except FileNotFoundError as e:
+            print(e)
+            error('file is not exist')
+
+    def del_database(self):
+        data = self.__get_all()
+        datas = [item for item in data if item[0] != self.__index]
+        self.__write_all(datas, mode='w')
+
+    def del_by_filter(self, **deleting_parameters):
+        '''
+        deleting_datas = self.get_list_data(**deleting_parameters)
+        all_data = self.get_all_data() #****
+        no_database_data = [item for item in self.__get_all() if item[0] != self.__index]
+        final_data = [item for item in all_data if item not in deleting_datas]
+
+        for ind in range(len(final_data)):
+            final_data[ind].insert(0, self.__index)
+
+        final_data.extend(no_database_data)
+
+        # print(*final_data)
+        self.__write_all(final_data, 'w')
+        self.__add_table_fields()
+        self.__sort_database()'''
+
+        # test old
+        deleting_datas = self.get_list_data(**deleting_parameters)
+
+        all_data = self.__get_all()
 
         database_data = [item[1:] for item in all_data if item[0] == self.__index]
         final_data = [item for item in database_data if item not in deleting_datas]
@@ -151,17 +170,64 @@ class MetaArtSQL:
         for i in range(len(no_database_data)):
             final_data.append(no_database_data[i])
 
-        with open('file.artsql', 'w') as f:
-            for i, item in enumerate(final_data):
-                for j in range(len(item)):
-                    f.write(f'{final_data[i][j]};')
-                f.write('\n')
+        self.__write_all(final_data, 'w')
         self.__sort_database()
+
+    def __get_all(self):
+        data = []
+        with open(f'{self.__filename}.artsql', 'r') as f:
+            for row in f:
+                datas = row.strip().split(';')
+                convert_data = []
+                for i in range(len(datas)):
+                    convert_data.append(self.__convert_string(datas[i]))
+                data.append(convert_data)
+
+        return data
+
+    def __write_all(self, data, mode='a'):
+        with open(f'{self.__filename}.artsql', mode) as f:
+            for i, item in enumerate(data):
+                for j in range(len(item)):
+                    if j + 1 == len(item):
+                        f.write(f'{data[i][j]}')
+                    else:
+                        f.write(f'{data[i][j]};')
+                f.write('\n')
 
     def __create_file(self):
         if not os.path.exists('file.artsql'):
-            with open('file.artsql', 'ab'):
+            with open(f'{self.__filename}.artsql', 'ab'):
                 pass
+
+    def __add_table_fields(self):
+        # create table fields string
+        table_fields = [self.__index, 'Database', 'Index']
+        for i in range(len(self.__fields_items)):
+            table_fields.append(self.__fields_items[i][0])
+
+        # check table fields
+        data = self.__get_all()
+        check = True
+        for i in range(len(data)):
+            if data[i] == table_fields:
+                check = False
+                break
+        if check:
+            self.__write_all([table_fields])
+
+    def __sort_database(self):
+        datas = self.__get_all()
+        data, database = [], []
+
+        for i in range(len(datas)):
+            if datas[i][1] == 'Database':
+                database.append(datas[i])
+            else:
+                data.append(datas[i])
+
+        database.extend(data)
+        self.__write_all(database, mode='w')
 
     def __convert_string(self, s):
         if s.lower() == 'true':
@@ -179,42 +245,6 @@ class MetaArtSQL:
 
         return s
 
-    def __add_table_fields(self):
-        help_val = True
-        with open('file.artsql', 'r') as f:
-            for row in f:
-                datas = row.strip().split(';')
-                try:
-                    if int(datas[0]) == self.__index:
-                        help_val = False
-                except:
-                    pass
-        if help_val:
-            with open('file.artsql', 'ab') as f:
-                f.write(f'{self.__index};Database;Index;'.encode())
-                for i in range(len(self.__fields_items)):
-                    f.write(f'{self.__fields_items[i][0]};'.encode())
-                f.write('\n'.encode())
-            self.__sort_database()
-    def __sort_database(self):
-        database, data = [], []
-        with open('file.artsql', 'r') as read:
-            for row in read:
-                datas = row.strip().split(';')
-                datas.pop()
-                if datas[1] == 'Database':
-                    database.append(datas)
-                else:
-                    data.append(datas)
-
-        with open('file.artsql', 'wb') as write:
-            for i, item in enumerate(database):
-                for j in range(len(item)):
-                    write.write(f'{database[i][j]};'.encode())
-                write.write('\n'.encode())
-
-            for i, item in enumerate(data):
-                for j in range(len(item)):
-                    write.write(f'{data[i][j]};'.encode())
-                write.write('\n'.encode())
-
+    def __len_check(self, var, text):
+        if len(var) < 1:
+            error(text)

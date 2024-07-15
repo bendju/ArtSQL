@@ -145,7 +145,6 @@ class Window(Tk):
             with open(self.file_path, 'r') as f:
                 for row in f:
                     datas = row.strip().split(';')
-                    datas.pop()
                     data.append(datas)
                     if datas[1] == 'Database':
                         self.database_index += 1
