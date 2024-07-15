@@ -1,11 +1,12 @@
 import os.path
 from .errors import *
+from .varrible import get_tables
 
 index = 0
 
 ## noTODO re del_by_filter, get_list_data
 class MetaArtSQL:
-    def __init__(self, filename='file', **fields):
+    def __init__(self, filename='file', existing_index=0, **fields):
         global index
         index += 1
         self.__index = index
@@ -13,14 +14,18 @@ class MetaArtSQL:
         self.__filename = filename
         self.__fields_items = [item for item in fields.items()]
 
-        self.__create_file()
-        self.__add_table_fields()
-        self.__sort_database()
+        if existing_index == 0:
+            self.__create_file()
+            self.__add_table_fields()
+            self.__sort_database()
+            self.check_index()
+        else:
+            self.__index = existing_index
 
     def get_list_data(self, fields=False, **filter_parameters):
         self.__len_check(filter_parameters, f'Add Minimum 1 filter parameter for filtering')
-        filtering_datas = [item for item in filter_parameters.items()]
-        filter_parameters = self.__fields_items
+        filtering_datas = [item for item in filter_parameters.items()] # [('age', 10)]
+        filter_parameters = self.__fields_items.copy() #[('index', 1), ('name', ' '), ('age', 0), ('fa', ' ')]
         filter_parameters.insert(0, ('index', 1))
 
         # check types
@@ -35,7 +40,7 @@ class MetaArtSQL:
         # select datas
         return_data = []
         return_index = []
-        filter_template = [] # [None, 'beni', 10]
+        filter_template = []
         filtering_datas_dict = dict(filtering_datas)
         for data in filter_parameters:
             key, item = data
@@ -44,35 +49,37 @@ class MetaArtSQL:
             else:
                 filter_template.append(None)
 
+        data = self.get_all_data()
 
-        data = [item for item in self.get_all_data() if item[0] != 'Database']
         # print(data)
         for i in range(len(data)):
             for j in range(len(filter_template)):
-                print('dara', data)
-                print()
                 if filter_template[j] is None:
-                    data[i].pop(j)
-                    data[i].insert(j, None)
-                    print('data i', data[i])
-                    print('data i j', data[i][j])
+                    try:
+                        data[i].pop(j)
+                        data[i].insert(j, None)
+                    except:
+                        pass
 
         ## get return indexes
+        return_index = [i for i, item in enumerate(data) if item == filter_template]
+        """
         for i, item in enumerate(data):
             if item == filter_template:
                 return_index.append(i)
-
+        """
         # return data
-        data = self.get_all_data()
+        original_data = self.get_all_data()
         for i in return_index:
-            return_data.append(data[i])
+            return_data.append(original_data[i])
 
-        return return_data if fields else return_data[1:]
+        return return_data
 
     def get_dict_data(self, **filter_parameters):
         data = self.get_list_data(**filter_parameters)
         return_data = []
         keys = [k for k, i in self.__fields_items]
+        keys.insert(0, 'index')
         for i in range(len(data)):
             return_data.append(dict(zip(keys, data[i])))
         return return_data
@@ -139,25 +146,7 @@ class MetaArtSQL:
         self.__write_all(datas, mode='w')
 
     def del_by_filter(self, **deleting_parameters):
-        '''
         deleting_datas = self.get_list_data(**deleting_parameters)
-        all_data = self.get_all_data() #****
-        no_database_data = [item for item in self.__get_all() if item[0] != self.__index]
-        final_data = [item for item in all_data if item not in deleting_datas]
-
-        for ind in range(len(final_data)):
-            final_data[ind].insert(0, self.__index)
-
-        final_data.extend(no_database_data)
-
-        # print(*final_data)
-        self.__write_all(final_data, 'w')
-        self.__add_table_fields()
-        self.__sort_database()'''
-
-        # test old
-        deleting_datas = self.get_list_data(**deleting_parameters)
-
         all_data = self.__get_all()
 
         database_data = [item[1:] for item in all_data if item[0] == self.__index]
@@ -167,8 +156,7 @@ class MetaArtSQL:
         for i in range(len(final_data)):
             final_data[i].insert(0, self.__index)
 
-        for i in range(len(no_database_data)):
-            final_data.append(no_database_data[i])
+        final_data.extend(no_database_data)
 
         self.__write_all(final_data, 'w')
         self.__sort_database()
@@ -248,3 +236,8 @@ class MetaArtSQL:
     def __len_check(self, var, text):
         if len(var) < 1:
             error(text)
+
+    def check_index(self):
+        new_index = [item[0] for i, item in enumerate(get_tables(self.__filename))]
+        self.__index = int(new_index[-1])
+

@@ -6,6 +6,19 @@ STRING = ' '
 FLOAT = 0.0
 BOOL = True
 
+def get_tables(filename):
+    tables = []
+    with open(f'{filename}.artsql', 'r') as f:
+        for row in f:
+            data = row.strip().split(';')
+            if data[1] == 'Database':
+                tables.append(data)
+            else:
+                break
+    return tables
+
+def print_tables(filename):
+    print(get_tables(filename))
 
 COLOR = {
     "HEADER": "\033[95m",
