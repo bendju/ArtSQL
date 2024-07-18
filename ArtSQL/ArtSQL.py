@@ -1,12 +1,11 @@
 import os.path
 from .errors import *
-from .varrible import get_tables
 
 index = 0
 
-## noTODO re del_by_filter, get_list_data
+
 class MetaArtSQL:
-    def __init__(self, filename='file', existing_index=0, **fields):
+    def __init__(self, filename='file', **fields):
         global index
         index += 1
         self.__index = index
@@ -14,18 +13,13 @@ class MetaArtSQL:
         self.__filename = filename
         self.__fields_items = [item for item in fields.items()]
 
-        if existing_index == 0:
-            self.__create_file()
-            self.__add_table_fields()
-            self.__sort_database()
-            self.check_index()
-        else:
-            self.__index = existing_index
+        self.__create_file()
+        self.__add_table_fields()
+        self.__sort_database()
 
     def get_list_data(self, fields=False, **filter_parameters):
-        self.__len_check(filter_parameters, f'Add Minimum 1 filter parameter for filtering')
-        filtering_datas = [item for item in filter_parameters.items()] # [('age', 10)]
-        filter_parameters = self.__fields_items.copy() #[('index', 1), ('name', ' '), ('age', 0), ('fa', ' ')]
+        filtering_datas = [item for item in filter_parameters.items()]
+        filter_parameters = self.__fields_items.copy()
         filter_parameters.insert(0, ('index', 1))
 
         # check types
@@ -51,7 +45,6 @@ class MetaArtSQL:
 
         data = self.get_all_data()
 
-        # print(data)
         for i in range(len(data)):
             for j in range(len(filter_template)):
                 if filter_template[j] is None:
@@ -63,20 +56,18 @@ class MetaArtSQL:
 
         ## get return indexes
         return_index = [i for i, item in enumerate(data) if item == filter_template]
-        """
-        for i, item in enumerate(data):
-            if item == filter_template:
-                return_index.append(i)
-        """
+
         # return data
         original_data = self.get_all_data()
         for i in return_index:
             return_data.append(original_data[i])
 
-        return return_data
+        return_data_fields = self.__get_all()[0][2:]
+        return_data.insert(0, return_data_fields)
+        return return_data if fields else return_data[1:]
 
     def get_dict_data(self, **filter_parameters):
-        data = self.get_list_data(**filter_parameters)
+        data = self.get_list_data(fields=False, **filter_parameters)
         return_data = []
         keys = [k for k, i in self.__fields_items]
         keys.insert(0, 'index')
@@ -87,6 +78,7 @@ class MetaArtSQL:
     def get_all_data(self, fields=False):
         data = self.__get_all()
         convert_data = [item[1:] for item in data if item[0] == self.__index]
+        convert_data[0].pop(0)
         return convert_data if fields else convert_data[1:]
 
     def add_data(self, oblige=False, **data):
@@ -232,12 +224,4 @@ class MetaArtSQL:
             pass
 
         return s
-
-    def __len_check(self, var, text):
-        if len(var) < 1:
-            error(text)
-
-    def check_index(self):
-        new_index = [item[0] for i, item in enumerate(get_tables(self.__filename))]
-        self.__index = int(new_index[-1])
 

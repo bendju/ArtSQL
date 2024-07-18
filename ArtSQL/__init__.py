@@ -2,8 +2,8 @@ from .varrible import STRING, INTEGER, FLOAT, BOOL, get_tables, print_tables
 from .ArtSQL import MetaArtSQL
 
 class ArtSQL(MetaArtSQL):
-    def __init__(self, filename='file', existing_index=0, **fields):
-        super().__init__(filename='file', existing_index=0, **fields)
+    def __init__(self, filename='file', **fields):
+        super().__init__(filename='file', **fields)
         """
         enter the fields, they will be the cells of the table.
         A field looks like this: name=STRING,
@@ -19,7 +19,7 @@ class ArtSQL(MetaArtSQL):
 
         :return:
         """
-        return super().get_all_data(fields=False)
+        return super().get_all_data(fields)
 
 
     def get_list_data(self, fields=False, **filter_parameters):
@@ -32,7 +32,7 @@ class ArtSQL(MetaArtSQL):
         :param filter_parameters:
         :return:
         """
-        return super().get_list_data(fields=False, **filter_parameters)
+        return super().get_list_data(fields, **filter_parameters)
 
 
     def get_dict_data(self, **filter_parameters):
@@ -71,13 +71,7 @@ class ArtSQL(MetaArtSQL):
         :return:
         """
         super().del_database()
-
-    def delete_database_file(self):
-        """
-        for deleting database file
-        :return:
-        """
-        super().delete_database_file()
+        
 
     def del_by_filter(self, **deleting_filter_parameters):
         """
