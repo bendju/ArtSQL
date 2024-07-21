@@ -98,41 +98,38 @@ class MetaArtSQL:
                 raise ValueError
         except ValueError as e:
             print(e)
-            error('you do not added enough parameters!')
+            error('you do not added enough parameter(s) for add data_method()!')
 
         ## check type
         datas = [item for item in data.items()]
         for i in range(len(datas)):
             if datas[i][1] == '':
-                tuple_data = (datas[i][0] , self.__fields_items[i][1])
+                tuple_data = (datas[i][0], self.__fields_items[i][1])
                 datas.pop(i)
                 datas.insert(i, tuple_data)
+
             try:
                 if type(datas[i][1]) != type(self.__fields_items[i][1]):
-                    raise ValueError
+                    if type(self.__convert_string(datas[i][1])) != type(self.__fields_items[i][1]):
+                        raise ValueError
             except:
                 error(f'You Added Invalid Value in add_data() method\n give me {type(datas[i][1])}, and not {type(self.__fields_items[i][1])}')
 
         ## covert
-        final_data = [[item[1] for item in datas]]
+        final_data = [[ self.__convert_string(item[1]) for item in datas ]]
+
         if oblige:
             final_data[0].insert(0, f'{database_data[len(database_data) -1][0] + 1}')
         else:
             final_data[0].insert(0, self.__row_index)
         final_data[0].insert(0, self.__index)
-
+        print(final_data)
         # add data
         if check or oblige:
             self.__write_all(final_data)
+            print('jo')
 
-    def delete_database_file(self):
-        try:
-            os.remove(f'{self.__filename}.artsql')
-        except FileNotFoundError as e:
-            print(e)
-            error('file is not exist')
-
-    def del_database(self):
+    def del_table(self):
         data = self.__get_all()
         datas = [item for item in data if item[0] != self.__index]
         self.__write_all(datas, mode='w')
